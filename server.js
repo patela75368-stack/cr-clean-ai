@@ -1,152 +1,345 @@
-मेरे GitHub repository "cr-clean-ai" को पूरा ठीक करो।
+import express from "express";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { randomUUID } from "crypto";
+import { spawn } from "child_process";
 
-IMPORTANT:
-मुझे अलग-अलग छोटे code नहीं चाहिए।
-पूरे project को जांचकर आवश्यक files में एक साथ बदलाव करो।
-मौजूदा काम करने वाले features को बिना जरूरत हटाना नहीं है।
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-मेरी समस्या:
-Render पर website खुलने पर "Cannot GET /" आ रहा था।
+const app = express();
 
-Repository में ये files हैं:
-- index.html
-- style.css
-- app.js
-- server.js
-- package.json
-- Dockerfile
-- README.md
+const PORT = process.env.PORT || 3000;
+const HOST = "0.0.0.0";
 
-मुख्य समस्या यह है कि मेरी index.html repository के ROOT में है, जबकि server.js में public folder को static directory बनाया गया है। इसलिए root website सही तरह serve नहीं हो रही।
+const DATA_DIR = path.join(__dirname, "data");
+const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
+const OUTPUTS_DIR = path.join(DATA_DIR, "outputs");
 
-इन सभी कामों को एक साथ करो:
+for (const dir of [DATA_DIR, UPLOADS_DIR, OUTPUTS_DIR]) {
+  fs.mkdirSync(dir, { recursive: true });
+}
 
-1. server.js को ठीक करो।
+app.use(express.json());
 
-Express server को इस तरह configure करो कि:
-- JSON requests काम करें।
-- / route खोलने पर root की index.html खुले।
-- CSS और JavaScript files भी सही तरीके से load हों।
-- API routes काम करते रहें।
-- PORT environment variable इस्तेमाल हो।
-- Render पर server 0.0.0.0 पर सही तरीके से listen करे।
-
-अगर index.html root में है तो:
-app.get("/", ...)
-के द्वारा root index.html serve करो।
-
-सही path के लिए __dirname इस्तेमाल करो।
-
-2. अगर server.js में यह गलत static path है:
-app.use(express.static(path.join(__dirname, "public")));
-
-तो उसे ऐसी व्यवस्था से बदलो जिससे root में मौजूद index.html, style.css और app.js काम करें।
-
-उदाहरण के लिए जरूरत के अनुसार:
+/*
+ * IMPORTANT:
+ * index.html, style.css and app.js are in the ROOT
+ * of the repository, not inside /public.
+ */
 app.use(express.static(__dirname));
 
-लेकिन API routes को static files से conflict नहीं होना चाहिए।
+/*
+ * MAIN WEBSITE
+ */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
-3. "Cannot GET /" की समस्या पूरी तरह खत्म करो।
+/*
+ * Upload configuration
+ */
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, UPLOADS_DIR);
+  },
 
-4. Dockerfile को भी जांचो।
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    cb(null, `${randomUUID()}${ext}`);
+  }
+});
 
-Dockerfile में "public" folder को COPY करने की कोशिश हो और repository में public folder मौजूद नहीं है, तो उसे ठीक करो।
+const upload = multer({
+  storage,
 
-विशेष रूप से अगर ऐसा कुछ है:
-COPY public ./public
+  limits: {
+    fileSize: 100 * 1024 * 1024
+  },
 
-तो इसे हटाकर repository की वास्तविक structure के अनुसार Dockerfile बनाओ।
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+      "video/x-matroska"
+    ];
 
-Docker image में ये files उपलब्ध होनी चाहिए:
-- index.html
-- style.css
-- app.js
-- server.js
-- package.json
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only MP4, WebM, MOV or MKV videos are allowed."));
+    }
+  }
+});
 
-5. package.json जांचो।
+/*
+ * Jobs
+ */
+const jobs = new Map();
 
-सुनिश्चित करो कि:
-- express dependency मौजूद हो।
-- multer और बाकी server.js में इस्तेमाल होने वाली dependencies मौजूद हों।
-- start script मौजूद हो।
+/*
+ * Run FFmpeg
+ */
+function runFFmpeg(input, output) {
+  return new Promise((resolve, reject) => {
+    const args = [
+      "-y",
+      "-i",
+      input,
 
-Start command Node server को चलाए, उदाहरण:
-"start": "node server.js"
+      // Remove metadata and chapters
+      "-map_metadata",
+      "-1",
+      "-map_chapters",
+      "-1",
 
-6. server.js में मौजूद FFmpeg functionality को बिना जरूरत हटाना नहीं है।
+      // Video
+      "-c:v",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-crf",
+      "23",
+      "-pix_fmt",
+      "yuv420p",
 
-अगर FFmpeg इस्तेमाल हो रहा है तो:
-- ffmpeg command उपलब्ध होने की जांच करो।
-- existing video processing API को बनाए रखो।
-- upload API को बनाए रखो।
-- processing status API को बनाए रखो।
-- download API को बनाए रखो।
+      // Audio
+      "-c:a",
+      "aac",
+      "-b:a",
+      "160k",
 
-7. Security और error handling बनाए रखो।
+      // Web optimized MP4
+      "-movflags",
+      "+faststart",
 
-- invalid upload पर proper error दें।
-- missing file पर error दें।
-- server crash न हो।
-- temporary files को जरूरत के बाद साफ करें।
+      output
+    ];
 
-8. Render deployment के लिए project तैयार करो।
+    const ffmpeg = spawn("ffmpeg", args);
 
-Render में किसी खास local path पर निर्भरता नहीं होनी चाहिए।
+    let stderr = "";
 
-PORT environment variable इस्तेमाल करो:
-const PORT = process.env.PORT || 3000;
+    ffmpeg.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
 
-और server को:
-app.listen(PORT, "0.0.0.0", ...)
+    ffmpeg.on("error", (error) => {
+      reject(
+        new Error(
+          `FFmpeg could not start. ${error.message}`
+        )
+      );
+    });
 
-के साथ चलाओ।
+    ffmpeg.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(
+          new Error(
+            `FFmpeg failed with exit code ${code}.`
+          )
+        );
+      }
+    });
+  });
+}
 
-9. Frontend index.html को root URL "/" से खोलने पर पूरा interface दिखाई देना चाहिए।
+/*
+ * PROCESS VIDEO
+ */
+app.post("/api/process", upload.single("video"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: "Please upload a video file."
+      });
+    }
 
-CSS:
-style.css
+    const id = randomUUID();
 
-JavaScript:
-app.js
+    const input = req.file.path;
+    const output = path.join(
+      OUTPUTS_DIR,
+      `${id}.mp4`
+    );
 
-सही relative paths से load होने चाहिए।
+    jobs.set(id, {
+      id,
+      status: "processing",
+      progress: 5,
+      input,
+      output,
+      originalName: req.file.originalname,
+      createdAt: Date.now(),
+      error: null
+    });
 
-10. मौजूदा project की functionality को बचाते हुए केवल जरूरी बदलाव करो।
+    res.json({
+      id,
+      status: "processing",
+      progress: 5
+    });
 
-11. सभी files को आपस में compatible बनाओ।
+    /*
+     * Process in background
+     */
+    try {
+      jobs.get(id).progress = 20;
 
-12. अंतिम रूप से project structure ऐसा होना चाहिए:
+      await runFFmpeg(input, output);
 
-cr-clean-ai/
-├── index.html
-├── style.css
-├── app.js
-├── server.js
-├── package.json
-├── Dockerfile
-└── README.md
+      if (!fs.existsSync(output)) {
+        throw new Error("Output video was not created.");
+      }
 
-public folder की जरूरत नहीं है, जब तक code में वास्तव में उसकी जरूरत न हो।
+      jobs.get(id).progress = 100;
+      jobs.get(id).status = "complete";
+    } catch (error) {
+      const job = jobs.get(id);
 
-13. सबसे महत्वपूर्ण:
-मुझे केवल explanation मत दो।
-Repository की files में आवश्यक बदलाव करके पूरा working version तैयार करो।
+      if (job) {
+        job.status = "error";
+        job.progress = 0;
+        job.error = error.message;
+      }
+    } finally {
+      /*
+       * Delete uploaded temporary file
+       */
+      try {
+        if (fs.existsSync(input)) {
+          fs.unlinkSync(input);
+        }
+      } catch {}
+    }
+  } catch (error) {
+    console.error(error);
 
-14. कोई duplicate server, duplicate route या duplicate dependency मत बनाओ।
+    return res.status(500).json({
+      error: error.message || "Processing failed."
+    });
+  }
+});
 
-15. पुराने गलत code को हटाकर साफ और working code रखो।
+/*
+ * JOB STATUS
+ */
+app.get("/api/status/:id", (req, res) => {
+  const job = jobs.get(req.params.id);
 
-16. Build और Render deployment में error नहीं आना चाहिए।
+  if (!job) {
+    return res.status(404).json({
+      error: "Job not found."
+    });
+  }
 
-17. अंत में मुझे साफ बताओ:
-- कौन-कौन सी files बदलीं
-- क्या समस्या थी
-- क्या ठीक किया
-- Render पर website किस URL से खुलेगी
+  const response = {
+    id: job.id,
+    status: job.status,
+    progress: job.progress
+  };
 
-TARGET:
-https://cr-clean-ai.onrender.com
+  if (job.status === "complete") {
+    response.download = `/api/download/${job.id}`;
+  }
 
-लक्ष्य यह है कि URL खोलने पर "Cannot GET /" नहीं आए, बल्कि मेरी CR Clean AI website खुले और frontend तथा backend दोनों काम करें।
+  if (job.status === "error") {
+    response.error = job.error || "Processing failed.";
+  }
+
+  res.json(response);
+});
+
+/*
+ * DOWNLOAD OUTPUT
+ */
+app.get("/api/download/:id", (req, res) => {
+  const job = jobs.get(req.params.id);
+
+  if (!job) {
+    return res.status(404).json({
+      error: "File not found."
+    });
+  }
+
+  if (job.status !== "complete") {
+    return res.status(409).json({
+      error: "Video is not ready yet."
+    });
+  }
+
+  if (!fs.existsSync(job.output)) {
+    return res.status(404).json({
+      error: "Output file is no longer available."
+    });
+  }
+
+  res.download(
+    job.output,
+    "cr-clean-ai-optimized.mp4"
+  );
+});
+
+/*
+ * Multer / upload errors
+ */
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        error: "Maximum file size is 100 MB."
+      });
+    }
+
+    return res.status(400).json({
+      error: err.message
+    });
+  }
+
+  if (err) {
+    return res.status(400).json({
+      error: err.message || "Request failed."
+    });
+  }
+
+  next();
+});
+
+/*
+ * Cleanup old jobs/files
+ */
+setInterval(() => {
+  const now = Date.now();
+
+  for (const [id, job] of jobs.entries()) {
+    if (now - job.createdAt > 60 * 60 * 1000) {
+      try {
+        if (job.input && fs.existsSync(job.input)) {
+          fs.unlinkSync(job.input);
+        }
+      } catch {}
+
+      try {
+        if (job.output && fs.existsSync(job.output)) {
+          fs.unlinkSync(job.output);
+        }
+      } catch {}
+
+      jobs.delete(id);
+    }
+  }
+}, 10 * 60 * 1000);
+
+/*
+ * START SERVER
+ */
+app.listen(PORT, HOST, () => {
+  console.log(
+    `CR Clean AI running on http://${HOST}:${PORT}`
+  );
+});
