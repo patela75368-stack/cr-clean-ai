@@ -1,52 +1,320 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CR Clean AI — Free Video Cleaner & Optimizer</title>
-<meta name="description" content="Clean video metadata and optimize your own or authorized videos with CR Clean AI.">
-<link rel="stylesheet" href="/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>CR Clean AI — Video Cleaner & Optimizer</title>
+
+  <meta
+    name="description"
+    content="Clean metadata, optimize and download your own or authorized videos with CR Clean AI."
+  >
+
+  <link rel="stylesheet" href="/style.css">
 </head>
+
 <body>
+
 <header class="nav">
-  <div class="brand"><span>CR</span> Clean AI</div>
+  <div class="brand">
+    <span>CR</span>
+    <div>
+      <strong>Clean AI</strong>
+      <small>Video Optimizer</small>
+    </div>
+  </div>
+
   <a href="#how">How it works</a>
 </header>
 
+
 <main>
+
 <section class="hero">
-  <div class="badge">FREE VIDEO TOOL</div>
-  <h1>Clean. Optimize. <em>Download.</em></h1>
-  <p>Remove embedded metadata, optimize encoding and prepare your own or authorized videos for publishing.</p>
+
+  <div class="badge">
+    ⚡ FREE VIDEO TOOL
+  </div>
+
+  <h1>
+    Clean.<br>
+    Optimize.<br>
+    <em>Download.</em>
+  </h1>
+
+  <p class="hero-text">
+    Clean embedded metadata and optimize your own
+    or authorized videos with a fast, mobile-friendly workflow.
+  </p>
+
+
+  <div class="trust-row">
+    <span>🔒 Private processing</span>
+    <span>⚡ FFmpeg powered</span>
+    <span>📱 Mobile friendly</span>
+  </div>
+
 
   <div id="drop" class="drop">
-    <div class="icon">⬆</div>
+
+    <div class="upload-icon">↑</div>
+
     <h2>Drop your video here</h2>
-    <p>or choose a file from your device</p>
-    <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska">
-    <button id="choose">Choose Video</button>
-    <small>MP4, WebM, MOV or MKV • Max 100 MB</small>
+
+    <p>
+      or choose a video from your device
+    </p>
+
+    <input
+      id="file"
+      type="file"
+      accept="video/mp4,video/webm,video/quicktime,video/x-matroska"
+    >
+
+    <button id="choose" type="button">
+      Choose Video
+    </button>
+
+    <small>
+      MP4, WebM, MOV or MKV • Maximum 100 MB
+    </small>
+
   </div>
+
 
   <div id="work" class="card hidden">
-    <div class="row"><strong id="name">Processing…</strong><span id="pct">0%</span></div>
-    <div class="bar"><div id="fill"></div></div>
-    <p id="status">Uploading and preparing your video…</p>
-    <a id="download" class="button hidden" href="#">Download Optimized Video</a>
+
+    <div class="file-top">
+
+      <div class="file-info">
+        <div class="file-icon">🎬</div>
+
+        <div>
+          <strong id="name">
+            Processing…
+          </strong>
+
+          <small id="fileMeta">
+            Preparing video
+          </small>
+        </div>
+      </div>
+
+      <strong id="pct">0%</strong>
+
+    </div>
+
+
+    <div class="progress-track">
+      <div id="fill"></div>
+    </div>
+
+
+    <p id="status">
+      Uploading your video…
+    </p>
+
+
+    <div class="process-steps">
+
+      <div id="stepUpload" class="step active">
+        <span>1</span>
+        Upload
+      </div>
+
+      <div id="stepProcess" class="step">
+        <span>2</span>
+        Optimize
+      </div>
+
+      <div id="stepDone" class="step">
+        <span>3</span>
+        Download
+      </div>
+
+    </div>
+
+
+    <a
+      id="download"
+      class="button hidden"
+      href="#"
+    >
+      ⬇ Download Optimized Video
+    </a>
+
+
+    <button
+      id="newVideo"
+      class="secondary-button hidden"
+      type="button"
+    >
+      ↻ Process Another Video
+    </button>
+
   </div>
 
-  <div class="notice">⚠️ Metadata cleaning and re-encoding do not remove copyright ownership or guarantee Content ID clearance. Use media you own or are authorized to process.</div>
+
+  <div class="notice">
+    ⚠️ Metadata cleaning and re-encoding do not remove
+    copyright ownership or guarantee Content ID clearance.
+    Use media you own or are authorized to process.
+  </div>
+
 </section>
+
+
+<section class="stats">
+
+  <div>
+    <strong>100 MB</strong>
+    <span>Max upload</span>
+  </div>
+
+  <div>
+    <strong>H.264</strong>
+    <span>Video output</span>
+  </div>
+
+  <div>
+    <strong>AAC</strong>
+    <span>Audio output</span>
+  </div>
+
+  <div>
+    <strong>MP4</strong>
+    <span>Download format</span>
+  </div>
+
+</section>
+
 
 <section id="how" class="features">
-  <h2>What this version does</h2>
-  <div class="grid">
-    <article><b>🧹 Metadata Clean</b><p>Strips container metadata and chapters during processing.</p></article>
-    <article><b>🎬 Optimize</b><p>H.264/AAC re-encoding with web-friendly fast-start MP4.</p></article>
-    <article><b>📱 Mobile First</b><p>Designed for phones, tablets and desktop screens.</p></article>
+
+  <div class="section-heading">
+    <span>FEATURES</span>
+    <h2>Simple. Fast. Clean.</h2>
+    <p>
+      Everything you need to prepare your own
+      or authorized videos for publishing.
+    </p>
   </div>
+
+
+  <div class="grid">
+
+    <article>
+      <div class="feature-icon">🧹</div>
+      <h3>Metadata Clean</h3>
+      <p>
+        Removes embedded container metadata and
+        chapters during processing.
+      </p>
+    </article>
+
+
+    <article>
+      <div class="feature-icon">🎬</div>
+      <h3>Optimize</h3>
+      <p>
+        H.264/AAC re-encoding with web-friendly
+        fast-start MP4 output.
+      </p>
+    </article>
+
+
+    <article>
+      <div class="feature-icon">⚡</div>
+      <h3>Fast Processing</h3>
+      <p>
+        Server-side FFmpeg processing handles
+        the heavy video work.
+      </p>
+    </article>
+
+
+    <article>
+      <div class="feature-icon">📱</div>
+      <h3>Mobile First</h3>
+      <p>
+        Designed to work comfortably on phones,
+        tablets and desktop screens.
+      </p>
+    </article>
+
+
+    <article>
+      <div class="feature-icon">📥</div>
+      <h3>Easy Download</h3>
+      <p>
+        Once processing finishes, download your
+        optimized MP4 with one tap.
+      </p>
+    </article>
+
+
+    <article>
+      <div class="feature-icon">🛡️</div>
+      <h3>Authorized Media</h3>
+      <p>
+        Built for media you own or have permission
+        to process.
+      </p>
+    </article>
+
+  </div>
+
 </section>
+
+
+<section class="how-section">
+
+  <div class="section-heading">
+    <span>HOW IT WORKS</span>
+    <h2>Three simple steps</h2>
+  </div>
+
+  <div class="how-grid">
+
+    <div>
+      <b>01</b>
+      <h3>Upload</h3>
+      <p>Select your MP4, WebM, MOV or MKV video.</p>
+    </div>
+
+    <div>
+      <b>02</b>
+      <h3>Optimize</h3>
+      <p>CR Clean AI cleans metadata and re-encodes the video.</p>
+    </div>
+
+    <div>
+      <b>03</b>
+      <h3>Download</h3>
+      <p>Download the finished optimized MP4.</p>
+    </div>
+
+  </div>
+
+</section>
+
 </main>
+
+
+<footer>
+  <div>
+    <strong>CR Clean AI</strong>
+    <span>Video Cleaner & Optimizer</span>
+  </div>
+
+  <p>
+    © 2026 CR Clean AI • Use only media you own or are authorized to process.
+  </p>
+</footer>
+
+
 <script src="/app.js"></script>
+
 </body>
-</html>
+    </html>
