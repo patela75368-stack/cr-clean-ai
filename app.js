@@ -14,31 +14,72 @@ const status = document.getElementById("status");
 const download = document.getElementById("download");
 const newVideo = document.getElementById("newVideo");
 
-const stepUpload = document.getElementById("stepUpload");
-const stepProcess = document.getElementById("stepProcess");
-const stepDone = document.getElementById("stepDone");
+const stepUpload =
+  document.getElementById("stepUpload");
+
+const stepProcess =
+  document.getElementById("stepProcess");
+
+const stepDone =
+  document.getElementById("stepDone");
 
 
+let processing = false;
+
+
+/*
+ * Choose video
+ */
 choose.onclick = () => {
+
+  if (processing) return;
+
   file.click();
+
 };
 
 
+/*
+ * File selected
+ */
 file.onchange = () => {
-  if (file.files[0]) {
-    processVideo(file.files[0]);
+
+  if (
+    file.files &&
+    file.files[0]
+  ) {
+
+    processVideo(
+      file.files[0]
+    );
+
   }
+
 };
 
 
+/*
+ * Drag & drop
+ */
 drop.ondragover = (event) => {
+
   event.preventDefault();
-  drop.style.borderColor = "#7564ff";
+
+  if (!processing) {
+
+    drop.style.borderColor =
+      "#7564ff";
+
+  }
+
 };
 
 
 drop.ondragleave = () => {
-  drop.style.borderColor = "";
+
+  drop.style.borderColor =
+    "";
+
 };
 
 
@@ -46,24 +87,51 @@ drop.ondrop = (event) => {
 
   event.preventDefault();
 
-  drop.style.borderColor = "";
+  drop.style.borderColor =
+    "";
 
-  const selected = event.dataTransfer.files[0];
+  if (processing) return;
+
+
+  const selected =
+    event.dataTransfer.files[0];
+
 
   if (selected) {
-    processVideo(selected);
+
+    processVideo(
+      selected
+    );
+
   }
+
 };
 
 
+/*
+ * Process another video
+ */
 newVideo.onclick = () => {
+
+  processing = false;
+
+  file.disabled = false;
+
+  choose.disabled = false;
 
   file.value = "";
 
-  work.classList.add("hidden");
+  work.classList.add(
+    "hidden"
+  );
 
-  download.classList.add("hidden");
-  newVideo.classList.add("hidden");
+  download.classList.add(
+    "hidden"
+  );
+
+  newVideo.classList.add(
+    "hidden"
+  );
 
   setProgress(0);
 
@@ -74,23 +142,42 @@ newVideo.onclick = () => {
 
   fileMeta.textContent =
     "Preparing video";
+
 };
 
 
+/*
+ * File size
+ */
 function formatSize(bytes) {
 
-  if (!bytes) return "0 MB";
-
-  const mb = bytes / (1024 * 1024);
-
-  if (mb < 1) {
-    return `${Math.round(bytes / 1024)} KB`;
+  if (!bytes) {
+    return "0 MB";
   }
 
+
+  const mb =
+    bytes /
+    (1024 * 1024);
+
+
+  if (mb < 1) {
+
+    return `${Math.round(
+      bytes / 1024
+    )} KB`;
+
+  }
+
+
   return `${mb.toFixed(1)} MB`;
+
 }
 
 
+/*
+ * Progress
+ */
 function setProgress(value) {
 
   const p =
@@ -102,38 +189,73 @@ function setProgress(value) {
       )
     );
 
+
   pct.textContent =
     `${p}%`;
 
   fill.style.width =
     `${p}%`;
+
 }
 
 
+/*
+ * Steps
+ */
 function resetSteps() {
 
-  stepUpload.classList.add("active");
-  stepProcess.classList.remove("active");
-  stepDone.classList.remove("active");
+  stepUpload.classList.add(
+    "active"
+  );
+
+  stepProcess.classList.remove(
+    "active"
+  );
+
+  stepDone.classList.remove(
+    "active"
+  );
+
 }
 
 
 function processingStep() {
 
-  stepUpload.classList.add("active");
-  stepProcess.classList.add("active");
-  stepDone.classList.remove("active");
+  stepUpload.classList.add(
+    "active"
+  );
+
+  stepProcess.classList.add(
+    "active"
+  );
+
+  stepDone.classList.remove(
+    "active"
+  );
+
 }
 
 
 function completeStep() {
 
-  stepUpload.classList.add("active");
-  stepProcess.classList.add("active");
-  stepDone.classList.add("active");
+  stepUpload.classList.add(
+    "active"
+  );
+
+  stepProcess.classList.add(
+    "active"
+  );
+
+  stepDone.classList.add(
+    "active"
+  );
+
 }
 
 
+/*
+ * Main process
+ */
 function processVideo(videoFile) {
 
   if (!videoFile) {
@@ -141,7 +263,20 @@ function processVideo(videoFile) {
   }
 
 
-  if (videoFile.size > 100 * 1024 * 1024) {
+  if (
+    processing
+  ) {
+    return;
+  }
+
+
+  /*
+   * Client-side size check
+   */
+  if (
+    videoFile.size >
+    100 * 1024 * 1024
+  ) {
 
     alert(
       "Maximum file size is 100 MB."
@@ -151,22 +286,67 @@ function processVideo(videoFile) {
   }
 
 
+  /*
+   * Basic client-side type check
+   */
+  const allowedTypes = [
+    "video/mp4",
+    "video/webm",
+    "video/quicktime",
+    "video/x-matroska"
+  ];
+
+
+  if (
+    videoFile.type &&
+    !allowedTypes.includes(
+      videoFile.type
+    )
+  ) {
+
+    alert(
+      "Only MP4, WebM, MOV or MKV videos are allowed."
+    );
+
+    return;
+  }
+
+
+  processing = true;
+
+  file.disabled = true;
+
+  choose.disabled = true;
+
+
   nameEl.textContent =
     videoFile.name;
 
+
   fileMeta.textContent =
-    `${formatSize(videoFile.size)} • Ready`;
+    `${formatSize(
+      videoFile.size
+    )} • Uploading`;
 
 
-  work.classList.remove("hidden");
+  work.classList.remove(
+    "hidden"
+  );
 
-  download.classList.add("hidden");
-  newVideo.classList.add("hidden");
+
+  download.classList.add(
+    "hidden"
+  );
+
+  newVideo.classList.add(
+    "hidden"
+  );
 
 
   resetSteps();
 
   setProgress(0);
+
 
   status.textContent =
     "Uploading your video…";
@@ -183,16 +363,24 @@ function processVideo(videoFile) {
   );
 
 
+  /*
+   * Upload progress
+   */
   xhr.upload.onprogress =
     (event) => {
 
-      if (!event.lengthComputable) {
+      if (
+        !event.lengthComputable
+      ) {
         return;
       }
 
 
       const uploadPercent =
-        (event.loaded / event.total) * 40;
+        (
+          event.loaded /
+          event.total
+        ) * 40;
 
 
       setProgress(
@@ -200,12 +388,23 @@ function processVideo(videoFile) {
       );
 
 
+      fileMeta.textContent =
+        `${formatSize(
+          videoFile.size
+        )} • Uploading`;
+
+
       status.textContent =
-        `Uploading your video… ${Math.round(uploadPercent)}%`;
+        `Uploading your video… ${Math.round(
+          uploadPercent
+        )}%`;
 
     };
 
 
+  /*
+   * Server response
+   */
   xhr.onload = () => {
 
     if (
@@ -215,6 +414,7 @@ function processVideo(videoFile) {
 
       let message =
         "Upload failed.";
+
 
       try {
 
@@ -230,16 +430,27 @@ function processVideo(videoFile) {
       } catch {}
 
 
+      processing = false;
+
+      file.disabled = false;
+
+      choose.disabled = false;
+
+
+      setProgress(0);
+
       status.textContent =
         message;
 
-      setProgress(0);
+      fileMeta.textContent =
+        "Upload failed";
 
       return;
     }
 
 
     let data;
+
 
     try {
 
@@ -250,10 +461,16 @@ function processVideo(videoFile) {
 
     } catch {
 
-      status.textContent =
-        "Invalid server response.";
+      processing = false;
+
+      file.disabled = false;
+
+      choose.disabled = false;
 
       setProgress(0);
+
+      status.textContent =
+        "Invalid server response.";
 
       return;
     }
@@ -261,10 +478,16 @@ function processVideo(videoFile) {
 
     if (!data.id) {
 
-      status.textContent =
-        "Server did not return a processing ID.";
+      processing = false;
+
+      file.disabled = false;
+
+      choose.disabled = false;
 
       setProgress(0);
+
+      status.textContent =
+        "Server did not return a processing ID.";
 
       return;
     }
@@ -274,38 +497,67 @@ function processVideo(videoFile) {
 
     processingStep();
 
+
+    fileMeta.textContent =
+      `${formatSize(
+        videoFile.size
+      )} • Processing`;
+
+
     status.textContent =
       "Upload complete. Optimizing your video…";
 
 
     poll(data.id);
+
   };
 
 
+  /*
+   * Network error
+   */
   xhr.onerror = () => {
+
+    processing = false;
+
+    file.disabled = false;
+
+    choose.disabled = false;
 
     setProgress(0);
 
     status.textContent =
       "Network error. Please try again.";
+
   };
 
 
+  /*
+   * Timeout
+   */
   xhr.timeout =
     10 * 60 * 1000;
 
 
   xhr.ontimeout = () => {
 
+    processing = false;
+
+    file.disabled = false;
+
+    choose.disabled = false;
+
     setProgress(0);
 
     status.textContent =
       "Upload timed out. Please try a smaller video.";
+
   };
 
 
   const formData =
     new FormData();
+
 
   formData.append(
     "video",
@@ -313,17 +565,26 @@ function processVideo(videoFile) {
   );
 
 
-  xhr.send(formData);
+  xhr.send(
+    formData
+  );
+
 }
 
 
+/*
+ * Poll processing status
+ */
 async function poll(id) {
 
   try {
 
     const response =
       await fetch(
-        `/api/status/${id}`
+        `/api/status/${id}`,
+        {
+          cache: "no-store"
+        }
       );
 
 
@@ -335,13 +596,16 @@ async function poll(id) {
 
       throw new Error(
         data.error ||
-        "Unable to check status."
+        "Unable to check processing status."
       );
+
     }
 
 
     const serverProgress =
-      Number(data.progress) || 0;
+      Number(
+        data.progress
+      ) || 0;
 
 
     const displayProgress =
@@ -361,6 +625,9 @@ async function poll(id) {
 
       processingStep();
 
+      fileMeta.textContent =
+        "Processing with FFmpeg";
+
       status.textContent =
         "Cleaning metadata and optimizing video…";
 
@@ -369,6 +636,7 @@ async function poll(id) {
         () => poll(id),
         1200
       );
+
 
       return;
     }
@@ -382,6 +650,11 @@ async function poll(id) {
       setProgress(100);
 
       completeStep();
+
+
+      fileMeta.textContent =
+        "Processing complete";
+
 
       status.textContent =
         "Complete. Your optimized video is ready.";
@@ -399,7 +672,16 @@ async function poll(id) {
         newVideo.classList.remove(
           "hidden"
         );
+
       }
+
+
+      processing = false;
+
+      file.disabled = false;
+
+      choose.disabled = false;
+
 
       return;
     }
@@ -410,11 +692,24 @@ async function poll(id) {
       "error"
     ) {
 
+      processing = false;
+
+      file.disabled = false;
+
+      choose.disabled = false;
+
+
       setProgress(0);
+
+
+      fileMeta.textContent =
+        "Processing failed";
+
 
       status.textContent =
         data.error ||
         "Processing failed.";
+
 
       return;
     }
@@ -427,12 +722,25 @@ async function poll(id) {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
+
+    processing = false;
+
+    file.disabled = false;
+
+    choose.disabled = false;
+
 
     setProgress(0);
+
 
     status.textContent =
       error.message ||
       "Unable to check processing status.";
+
   }
+
   }
